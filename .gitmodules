@@ -1,0 +1,4 @@
+[submodule "core/SparrowX32_pub"]
+	path = core/SparrowX32_pub
+	url = https://github.com/Rudran97/SparrowX32_pub.git
+	branch = main
