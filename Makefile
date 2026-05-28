@@ -12,7 +12,7 @@ PY = python3
 create_build:
 	mkdir -p build
 	cp rtl/*.vhd build/
-	cp core/SparrowX32/rtl/* build/
+	cp core/SparrowX32_pub/rtl/* build/
 
 compile_core_pkg: create_build
 	ghdl -a $(FLAGS) --work=work_rtl build/options_pkg.vhd
