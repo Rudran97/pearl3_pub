@@ -53,7 +53,7 @@ The host PC initiates program loading by sending the single-byte command `0xAA`.
 
 ### Program Load and Halt (`0xAD`)
 
-The `0xAD` command behaves similarly to `0xAA`, except that execution remains halted after programming completes.
+The `0xAD` command behaves similarly to `0xAA`, except that execution remains halted after programming completes. The programmer module hands over the control to the debug interface by automatically sending `enter debug` command (`0xDE`). The host PC must send only the remaining 5 bytes which comprises the parameter and the state fields.
 
 This mode is primarily intended for debugging immediately after reset.
 
@@ -64,7 +64,7 @@ This mode is primarily intended for debugging immediately after reset.
 3. Host PC transmits the application image.
 4. Program memory is updated.
 5. Core execution remains halted.
-6. Host PC must issue `enter debug` command (`0xDE`).
+6. Host PC must send the parameter and state fields.
 
 ## Debug Interface
 
