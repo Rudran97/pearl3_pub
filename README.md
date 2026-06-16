@@ -1,6 +1,7 @@
 # Pearl3
 
 This repository contains Pearl3, a reference microcontroller implementation based on the [SparrowX32](https://github.com/Rudran97/SparrowX32_pub.git) RISC-V CPU core.
+The complete software development kit can be found in [pearl3_firmware](https://github.com/Rudran97/pearl3_firmware_pub.git) repository.
 
 Pearl3 is designed as a lightweight and modular microcontroller system targeting FPGA platforms. The current implementation is optimized for the cyc1000 development board (running on Cyclone 10 LP FPGA - 10CL025YU256C8G). Some parameters such as clock frequency and memory sizes are tailored for this target. However, the design is portable and can be adapted to other FPGA platforms with different performance and resource constraints.
 
