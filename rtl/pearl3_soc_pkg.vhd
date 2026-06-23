@@ -21,6 +21,10 @@ package pearl3_soc_pkg is
 	constant cv_dbg_cfg_TRIG0      : std_logic_vector(7 downto 0) := X"D0";
 	constant cv_dbg_cfg_TRIG1      : std_logic_vector(7 downto 0) := X"D1";
 
+	constant cv_dbg_set_REG        : std_logic_vector(7 downto 0) := X"EA";
+	constant cv_dbg_set_MEM        : std_logic_vector(7 downto 0) := X"EB";
+	constant cv_dbg_set_value      : std_logic_vector(7 downto 0) := X"E6";
+
 	--- Debugger internal commands ---
 	constant cv_dbg_next_hlt       : std_logic_vector(7 downto 0) := X"D5";
 	constant cv_dbg_tselect        : std_logic_vector(7 downto 0) := X"D7";

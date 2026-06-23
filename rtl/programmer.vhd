@@ -135,10 +135,10 @@ begin
 					end if;
 				when reset_on_st         =>
 					sl_core_start         <= not pil_prg_flash_hlt;
-					sl_reset              <= cl_ENABLE;
+					sl_reset              <= cl_RESET;
 					st_prg_fsm            <= reset_off_st;
 				when reset_off_st        =>
-					sl_reset              <= cl_DISABLE;
+					sl_reset              <= cl_NOTRESET;
 					sl_prg_done           <= cl_DISABLE;
 					st_prg_fsm            <= idle_st;
 			end case;

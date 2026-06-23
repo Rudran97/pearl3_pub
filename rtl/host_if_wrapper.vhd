@@ -30,6 +30,8 @@ entity host_if_wrapper is
         --- debugger/memory interface ---
         pol_dbg_mem_access   : out std_logic;
         pov_dbg_mem_addr     : out std_logic_vector(31 downto 0);
+        pol_dbg_mem_write    : out std_logic;
+        pov_dbg_mem_wdata    : out std_logic_vector(31 downto 0);
         piv_dbg_mem_rdata    : in std_logic_vector(31 downto 0);
 
         --- core/debugger interface ---
@@ -193,6 +195,8 @@ begin
             piv_dbg_rx_data       => sv_dbg_rx_data,
             pol_dbg_mem_access    => pol_dbg_mem_access,
             pov_dbg_mem_addr      => pov_dbg_mem_addr,
+            pol_dbg_mem_write     => pol_dbg_mem_write,
+            pov_dbg_mem_wdata     => pov_dbg_mem_wdata,
             piv_dbg_mem_rdata     => piv_dbg_mem_rdata,
             pol_debug_haltreq     => pol_debug_haltreq,
             pol_debug_resumereq   => pol_debug_resumereq,

@@ -88,6 +88,8 @@ architecture rtl of pearl3_top is
 
     signal sl_dbg_mem_access        : std_logic;
     signal sv_dbg_mem_addr          : std_logic_vector(31 downto 0);
+    signal sl_dbg_mem_write         : std_logic;
+    signal sv_dbg_mem_wdata         : std_logic_vector(31 downto 0);
     signal sv_dbg_mem_rdata         : std_logic_vector(31 downto 0);
     signal sl_debug_haltreq         : std_logic;
     signal sl_debug_resumereq       : std_logic;
@@ -244,6 +246,8 @@ begin
                                    
             pol_dbg_mem_access   => sl_dbg_mem_access,
             pov_dbg_mem_addr     => sv_dbg_mem_addr,
+            pol_dbg_mem_write    => sl_dbg_mem_write,
+            pov_dbg_mem_wdata    => sv_dbg_mem_wdata,
             piv_dbg_mem_rdata    => sv_dbg_mem_rdata,
                                    
             pol_debug_haltreq    => sl_debug_haltreq,
@@ -280,11 +284,13 @@ begin
     -----------------------------------------------------------------------------------------------------
 
     sl_pmem_wen   <= sl_prg_mem_wen and sv_prg_mem_addr(ci_PMEM_ORIGIN_BIT) when sl_prg_mem_req = cl_ENABLE else
+        sl_dbg_mem_write and sv_dbg_mem_addr(ci_PMEM_ORIGIN_BIT) when sl_dbg_mem_access = cl_ENABLE else
         cl_DISABLE;
     sv_pmem_addr  <= sv_prg_mem_addr and X"0000_FFFC" when sl_prg_mem_req = cl_ENABLE else
         sv_dbg_mem_addr and X"0000_FFFC" when sl_dbg_mem_access = cl_ENABLE else
         sv_fetch_mem_addr and X"0000_FFFF";
-    sv_pmem_wdata <= sv_prg_mem_wdata;
+    sv_pmem_wdata <= sv_dbg_mem_wdata when sl_dbg_mem_access = cl_ENABLE else
+        sv_prg_mem_wdata;
 
     inst_pmem_controller : entity work.pmem_controller
         generic map (
@@ -310,6 +316,7 @@ begin
     sl_sram_req      <= cl_DISABLE when sl_prg_mem_req = cl_ENABLE or sl_dbg_mem_access = cl_ENABLE else
         sl_mem_req and sv_mem_addr(ci_SRAM_ORIGIN_BIT);
     sl_sram_wen      <= sl_prg_mem_wen and sv_prg_mem_addr(ci_SRAM_ORIGIN_BIT) when sl_prg_mem_req = cl_ENABLE else
+        sl_dbg_mem_write and sv_dbg_mem_addr(ci_SRAM_ORIGIN_BIT) when sl_dbg_mem_access = cl_ENABLE else
         sl_mem_wen and sv_mem_addr(ci_SRAM_ORIGIN_BIT); 
     sv_sram_byte_sel <= "1111" when sl_prg_mem_req = cl_ENABLE or sl_dbg_mem_access = cl_ENABLE else
         sv_mem_byte_sel; 
@@ -317,6 +324,7 @@ begin
         sv_dbg_mem_addr and X"0000_FFFC" when sl_dbg_mem_access = cl_ENABLE else
         sv_mem_addr and X"0000_FFFC";
     sv_sram_wdata    <= sv_prg_mem_wdata when sl_prg_mem_req = cl_ENABLE else
+        sv_dbg_mem_wdata when sl_dbg_mem_access = cl_ENABLE else
         sv_mem_wdata;
 
     inst_mem_controller : entity work.mem_controller
@@ -415,10 +423,12 @@ begin
     -----------------------------------------------------------------------------------------------------
 
     sv_clic_irq_src  <= sv_io_irq_src;
-    sl_clic_wen      <= sl_mem_wen and sv_mem_addr(ci_CLIC_ORIGIN_BIT);
+    sl_clic_wen      <= sl_dbg_mem_write and sv_dbg_mem_addr(ci_CLIC_ORIGIN_BIT) when sl_dbg_mem_access = cl_ENABLE else
+        sl_mem_wen and sv_mem_addr(ci_CLIC_ORIGIN_BIT);
     sv_clic_addr     <= sv_dbg_mem_addr(6 downto 2) when sl_dbg_mem_access = cl_ENABLE else
         sv_mem_addr(6 downto 2);
-    sv_clic_wdata    <= sv_mem_wdata(15 downto 0);
+    sv_clic_wdata    <= sv_dbg_mem_wdata(15 downto 0) when sl_dbg_mem_access = cl_ENABLE else
+        sv_mem_wdata(15 downto 0);
 
     sl_clic_irq_done <= sl_irq_pending;
 
@@ -446,10 +456,12 @@ begin
     ----------------------------------------PERIPHERAL CONTROLLER----------------------------------------
     -----------------------------------------------------------------------------------------------------
 
-    sl_ioctrl_wen            <= sl_mem_wen and sv_mem_addr(ci_IO_ORIGIN_BIT);
+    sl_ioctrl_wen            <= sl_dbg_mem_write and sv_dbg_mem_addr(ci_IO_ORIGIN_BIT) when sl_dbg_mem_access = cl_ENABLE else
+        sl_mem_wen and sv_mem_addr(ci_IO_ORIGIN_BIT);
     sv_ioctrl_addr           <= sv_dbg_mem_addr(13 downto 2) when sl_dbg_mem_access = cl_ENABLE else
         sv_mem_addr(13 downto 2);
-    sv_ioctrl_wdata          <= sv_mem_wdata;
+    sv_ioctrl_wdata          <= sv_dbg_mem_wdata when sl_dbg_mem_access = cl_ENABLE else
+        sv_mem_wdata;
 
     sv_io_irq_clr            <= sv_clic_irq_clr;
 

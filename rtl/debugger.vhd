@@ -19,9 +19,13 @@ entity debugger is
         pol_dbg_ctrl_done    : out std_logic;
         pol_dbg_ctrl_err     : out std_logic;
 
+        piv_dbg_ctrl_set_val : in std_logic_vector(31 downto 0);
+
         --- debugger to Memory interface ---
         pol_dbg_mem_access   : out std_logic;
         pov_dbg_mem_addr     : out std_logic_vector(31 downto 0);
+        pol_dbg_mem_write    : out std_logic;
+        pov_dbg_mem_wdata    : out std_logic_vector(31 downto 0);
         piv_dbg_mem_rdata    : in std_logic_vector(31 downto 0);
 
         --- core/debugger interface ---
@@ -56,6 +60,8 @@ architecture rtl of debugger is
     signal sv_dbg_ctrl_wdata  : std_logic_vector(31 downto 0);
     signal sl_dbg_mem_req     : std_logic;
     signal sv_dbg_mem_addr    : std_logic_vector(31 downto 0);
+    signal sl_dbg_mem_write   : std_logic;
+    signal sv_dbg_mem_wdata   : std_logic_vector(31 downto 0);
 
     signal sl_debug_haltreq   : std_logic;
     signal sl_debug_resumereq : std_logic;
@@ -80,6 +86,8 @@ begin
             sv_dbg_ctrl_wdata  <= (others => '0');
             sl_dbg_mem_req     <= cl_DISABLE;
             sv_dbg_mem_addr    <= (others => '0');
+            sl_dbg_mem_write   <= cl_DISABLE;
+            sv_dbg_mem_wdata   <= (others => '0');
             st_dbg_fsm         <= idle_st;
         elsif rising_edge(pil_clk) then
             case st_dbg_fsm is
@@ -96,9 +104,21 @@ begin
                                 sl_debug_regreq  <= cl_ENABLE;
                                 sv_debug_regno   <= piv_dbg_ctrl_rdata(11 downto 0);
                                 st_dbg_fsm       <= dbg_wait_ack_st;
+                            when cv_dbg_set_REG    =>
+                                sl_debug_regreq  <= cl_ENABLE;
+                                sv_debug_regno   <= piv_dbg_ctrl_rdata(11 downto 0);
+                                sl_debug_write   <= cl_ENABLE;
+                                sv_debug_wdata   <= piv_dbg_ctrl_set_val;
+                                st_dbg_fsm       <= dbg_wait_ack_st;
                             when cv_dbg_log_MEM    =>
                                 sl_dbg_mem_req   <= cl_ENABLE;
                                 sv_dbg_mem_addr  <= piv_dbg_ctrl_rdata;
+                                st_dbg_fsm       <= dbg_wait_ack_st;
+                            when cv_dbg_set_MEM    =>
+                                sl_dbg_mem_req   <= cl_ENABLE;
+                                sv_dbg_mem_addr  <= piv_dbg_ctrl_rdata;
+                                sl_dbg_mem_write <= cl_ENABLE;
+                                sv_dbg_mem_wdata <= piv_dbg_ctrl_set_val;
                                 st_dbg_fsm       <= dbg_wait_ack_st;
                             when cv_dbg_log_pc_retired =>
                                 st_dbg_fsm       <= dbg_done_st;
@@ -155,7 +175,9 @@ begin
                     end if;
                 when dbg_wait_ack_st     =>
                     if pil_dbg_ctrl_en = cl_ENABLE then
-                        if piv_dbg_ctrl_command = cv_dbg_log_MEM then
+                        if piv_dbg_ctrl_command = cv_dbg_log_MEM or piv_dbg_ctrl_command = cv_dbg_set_MEM then
+                            sl_dbg_mem_req           <= cl_DISABLE;
+                            sl_dbg_mem_write         <= cl_DISABLE;
                             st_dbg_fsm               <= dbg_done_st;
                         else
                             if pil_debug_ack = cl_ENABLE then
@@ -196,6 +218,8 @@ begin
 
     pol_dbg_mem_access  <= sl_dbg_mem_req;
     pov_dbg_mem_addr    <= sv_dbg_mem_addr;
+    pol_dbg_mem_write   <= sl_dbg_mem_write;
+    pov_dbg_mem_wdata   <= sv_dbg_mem_wdata;
 
     pol_debug_haltreq   <= sl_debug_haltreq;
     pol_debug_resumereq <= sl_debug_resumereq;

@@ -29,6 +29,8 @@ entity debugger_ctrl is
         --- debugger/memory interface ---
         pol_dbg_mem_access   : out std_logic;
         pov_dbg_mem_addr     : out std_logic_vector(31 downto 0);
+        pol_dbg_mem_write    : out std_logic;
+        pov_dbg_mem_wdata    : out std_logic_vector(31 downto 0);
         piv_dbg_mem_rdata    : in std_logic_vector(31 downto 0);
 
         --- core/debugger interface ---
@@ -56,7 +58,10 @@ architecture rtl of debugger_ctrl is
         debug_rec_command_st,
         parse_command_st,
         dbg_log_reg_st,
+        dbg_set_reg_st,
         dbg_log_mem_st,
+        dbg_set_mem_st,
+        dbg_set_value_st,
         dbg_log_pc_ret_st,
         dbg_step_st,
         dbg_resume_st,
@@ -112,8 +117,11 @@ architecture rtl of debugger_ctrl is
     signal sv_dbg_ctrl_wdata            : std_logic_vector(31 downto 0);
     signal sl_dbg_ctrl_done             : std_logic;
     signal sl_dbg_ctrl_err              : std_logic;
+    signal sv_dbg_ctrl_set_val          : std_logic_vector(31 downto 0); -- holds the value to be written to reg/mem
     signal sl_dbg_mem_access            : std_logic;
     signal sv_dbg_mem_addr              : std_logic_vector(31 downto 0);
+    signal sl_dbg_mem_write             : std_logic;
+    signal sv_dbg_mem_wdata             : std_logic_vector(31 downto 0);
     signal sl_debug_haltreq             : std_logic;
     signal sl_debug_resumereq           : std_logic;
     signal sl_debug_regreq              : std_logic;
@@ -172,6 +180,7 @@ begin
             sl_debug_tot_en           <= cl_DISABLE;
             sl_debug_tot_start        <= cl_DISABLE;
             sv_debug_tot_reg          <= (others => '0');
+            sv_dbg_ctrl_set_val       <= (others => '0');
 
             for ii in 0 to 5 loop
                 stav_dbg_command(ii) <= (others => '0');
@@ -231,9 +240,15 @@ begin
                             when cv_dbg_log_REG =>
                                 sl_debug_log_reg <= cl_ENABLE;
                                 st_dbg_fsm       <= dbg_log_reg_st;
+                            when cv_dbg_set_REG =>
+                                st_dbg_fsm       <= dbg_set_reg_st;
                             when cv_dbg_log_MEM =>
                                 sl_debug_log_mem <= cl_ENABLE;
                                 st_dbg_fsm       <= dbg_log_mem_st;
+                            when cv_dbg_set_MEM =>
+                                st_dbg_fsm       <= dbg_set_mem_st;
+                            when cv_dbg_set_value =>
+                                st_dbg_fsm       <= dbg_set_value_st;
                             when cv_dbg_log_pc_retired =>
                                 sl_debug_log_pc_ret <= cl_ENABLE;
                                 st_dbg_fsm          <= dbg_log_pc_ret_st;
@@ -283,6 +298,10 @@ begin
                         sl_dbg_ctrl_en          <= cl_DISABLE;
                         st_dbg_fsm              <= debug_rec_command_st;
                     end if;
+                when dbg_set_reg_st =>
+                    sl_dbg_ctrl_en    <= cl_ENABLE;
+                    sv_dbg_ctrl_rdata <= stav_dbg_command(4) & stav_dbg_command(3) & stav_dbg_command(2) & stav_dbg_command(1);
+                    st_dbg_fsm        <= wait_dbg_done_st;
                 when dbg_log_mem_st =>
                     sl_dbg_ctrl_en    <= cl_ENABLE;
                     sv_dbg_ctrl_rdata <= stav_dbg_command(4) & stav_dbg_command(3) & stav_dbg_command(2) & stav_dbg_command(1)(7 downto 2) & "00";
@@ -296,6 +315,15 @@ begin
                         sl_dbg_ctrl_en          <= cl_DISABLE;
                         st_dbg_fsm              <= debug_rec_command_st;
                     end if;
+                when dbg_set_mem_st =>
+                    sl_dbg_ctrl_en    <= cl_ENABLE;
+                    sv_dbg_ctrl_rdata <= stav_dbg_command(4) & stav_dbg_command(3) & stav_dbg_command(2) & stav_dbg_command(1)(7 downto 2) & "00";
+                    st_dbg_fsm        <= wait_dbg_done_st;
+                when dbg_set_value_st =>
+                    sv_dbg_ctrl_set_val <= stav_dbg_command(4) & stav_dbg_command(3) & stav_dbg_command(2) & stav_dbg_command(1);
+                    --- No need to wait in dbg_done_st as this command sets the internal register of the controller ---
+                    sv_dbg_tx_data      <= X"0000" & stav_dbg_command(0) & cv_host_noerr;
+                    st_dbg_fsm          <= debug_response_st;
                 when dbg_log_pc_ret_st | dbg_step_st | dbg_exit_step_st =>
                     sl_dbg_ctrl_en <= cl_ENABLE;
                     st_dbg_fsm     <= wait_dbg_done_st;
@@ -319,7 +347,7 @@ begin
                         sv_debug_tot_reg    <= stav_dbg_command(4) & stav_dbg_command(3) & stav_dbg_command(2) & stav_dbg_command(1);
                         st_dbg_fsm          <= wait_dbg_done_st;
                     else
-                        --- Do not execute the enter cmd if the core is alredy in debug mode ---
+                        --- Do not execute the enter cmd if the core is already in debug mode ---
                         sv_dbg_tx_data      <= X"0000" & stav_dbg_command(0) & cv_host_dbg_comm_err;
                         st_dbg_fsm          <= debug_response_st;
                     end if;
@@ -443,8 +471,11 @@ begin
             pov_dbg_ctrl_wdata   => sv_dbg_ctrl_wdata,
             pol_dbg_ctrl_done    => sl_dbg_ctrl_done,
             pol_dbg_ctrl_err     => sl_dbg_ctrl_err,
+            piv_dbg_ctrl_set_val => sv_dbg_ctrl_set_val,
             pol_dbg_mem_access   => sl_dbg_mem_access,
             pov_dbg_mem_addr     => sv_dbg_mem_addr,
+            pol_dbg_mem_write    => sl_dbg_mem_write,
+            pov_dbg_mem_wdata    => sv_dbg_mem_wdata,
             piv_dbg_mem_rdata    => piv_dbg_mem_rdata,
             pol_debug_haltreq    => sl_debug_haltreq,
             pol_debug_resumereq  => sl_debug_resumereq,
@@ -462,6 +493,8 @@ begin
     --- Debugger to Core/Memory interface --- 
     pol_dbg_mem_access   <= sl_dbg_mem_access;
     pov_dbg_mem_addr     <= sv_dbg_mem_addr;
+    pol_dbg_mem_write    <= sl_dbg_mem_write;
+    pov_dbg_mem_wdata    <= sv_dbg_mem_wdata;
     pol_debug_haltreq    <= sl_debug_haltreq;
     pol_debug_resumereq  <= sl_debug_resumereq;
     pol_debug_regreq     <= sl_debug_regreq;
