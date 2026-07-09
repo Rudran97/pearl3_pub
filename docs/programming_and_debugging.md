@@ -28,6 +28,9 @@ The host PC sends commands through the `DI` pin. Depending on the command, the m
 | `0xDF`  | Debug    | 6 Bytes     | Disable single-step mode.                                       |
 | `0xD0`  | Debug    | 6 Bytes     | Configure hardware trigger 0.                                   |
 | `0xD1`  | Debug    | 6 Bytes     | Configure hardware trigger 1.                                   |
+| `0xEA`  | Debug    | 6 Bytes     | Write to a general-purpose register or a CSR.                   |
+| `0xEB`  | Debug    | 6 Bytes     | Write to a 32-bit memory location.                              |
+| `0xE6`  | Debug    | 6 Bytes     | Write to the `debug write value register`.                      |
 
 ---
 
@@ -97,7 +100,7 @@ If a command does not require `Parameter` or `State`, the following packet forma
 | 5     | 4 3 2 1                     | 0         |
 | :---: | :---:                       | :---:     |
 | State | Parameter                   | Command   |
-| `0x00`| `0x00` `0x00` `0x00` `0x00` | `cmd` |
+| `0x00`| `0x00` `0x00` `0x00` `0x00` | `cmd`     |
 
 ---
 
@@ -231,6 +234,54 @@ Configures hardware trigger module 1.
 | `0x01`      | Enable trigger.  |
 
 When enabled, `Parameter` specifies the instruction address used for trigger matching.
+
+---
+
+### Write Register (`0xEA`)
+
+Write the value of `Debug Write Value Register` to a specific general-purpose register or a CSR.
+
+`Parameter` specifies the register to write to. Register: `0x000 - 0x01F` for GPRs, `0x300 - 0xFFF` for CSRs.
+
+`State` is ignored.
+
+For example, to write to `mstatus` at `0x300`, the host transmits:
+
+```text
+0xEA 0x00 0x03 0x00 0x00 0x00
+```
+
+---
+
+### Write Memory (`0xEB`)
+
+Write the value of `Debug Write Value Register` to memory.
+
+`Parameter` specifies the 32-bit memory address to write to.
+
+`State` is ignored.
+
+For example, to write to memory address `0xCAAD10A0`, the host transmits:
+
+```text
+0xEB 0xA0 0x10 0xAD 0xCA 0x00
+```
+
+---
+
+### Write to Debug Write Value Register (`0xE6`)
+
+Write a 32-bit value to `debug write value register`.
+
+`Parameter` specifies the 32-bit value to write.
+
+`State` is ignored.
+
+For example, to write the value `0xCAAD10A0`, the host transmits:
+
+```text
+0xE6 0xA0 0x10 0xAD 0xCA 0x00
+```
 
 ---
 
