@@ -72,6 +72,7 @@ architecture rtl of host_if is
 	signal sl_tx_uart_en                : std_logic;
     signal sl_sync_DI_1                 : std_logic;
     signal sl_sync_DI_2                 : std_logic;
+    signal sl_DI_sync                   : std_logic;
 
 	signal sl_isp_sel                   : std_logic;
 	signal sl_isp_flash_hlt             : std_logic;
@@ -109,6 +110,7 @@ begin
         if rising_edge(pil_clk) then
             sl_sync_DI_1 <= pil_DI;
             sl_sync_DI_2 <= sl_sync_DI_1;
+            sl_DI_sync   <= sl_sync_DI_2;
         end if;
     end process proc_sync_DI;
 
@@ -145,7 +147,7 @@ begin
 
 			        sl_dbg_sel        <= cl_DISABLE;
 
-					if sl_sync_DI_2 = cl_START_BIT then
+					if sl_DI_sync = cl_START_BIT then
 						sl_rx_uart_en <= cl_ENABLE;
 						st_hif_fsm    <= decode_command_st;
 					end if;
@@ -286,7 +288,7 @@ begin
 			pil_rst                    => pil_rst,
 			piv_uart_rx_control        => sl_rx_uart_en & '0',
 			pil_half_baud_period_pulse => sl_rx_half_baud_period_pulse,
-			pil_uart_rx                => sl_sync_DI_2,
+			pil_uart_rx                => sl_DI_sync,
 			pov_rx_data                => sv_rx_data,
 			pol_bit9                   => open,
 			pol_rx_data_valid          => sl_rx_data_valid,

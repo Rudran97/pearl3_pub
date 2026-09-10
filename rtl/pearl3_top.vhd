@@ -223,7 +223,8 @@ begin
     sv_dbg_mem_rdata          <= sv_pmem_rdata when sv_dbg_mem_addr(ci_PMEM_ORIGIN_BIT) = cl_ENABLE else
         X"0000" & sv_clic_rdata when sv_dbg_mem_addr(ci_CLIC_ORIGIN_BIT) = cl_ENABLE else
         sv_ioctrl_rdata when sv_dbg_mem_addr(ci_IO_ORIGIN_BIT) = cl_ENABLE else
-        sv_sram_rdata;
+        sv_sram_rdata when sv_dbg_mem_addr(ci_SRAM_ORIGIN_BIT) = cl_ENABLE else
+        (others => '1');
 
     inst_host_if_wrapper : entity work.host_if_wrapper
         generic map (

@@ -58,6 +58,8 @@ architecture rtl of clic_top is
     signal sv_clic_irq_id         : std_logic_vector(3 downto 0);
     signal sv_clic_irq_vect       : std_logic_vector(31 downto 0);
 
+    signal sv_clic_rdata          : std_logic_vector(15 downto 0);
+
 begin
     
     proc_clic_mem : process (pil_clk, pil_rst)
@@ -79,10 +81,10 @@ begin
 
             stav_clic_config(ci_INTSTAT)(ci_INTSTAT_IRQ_STATE) <= sl_clic_irq;
             stav_clic_config(ci_INTSRC)(7 downto 0)            <= piv_irq_src;
+
+            sv_clic_rdata <= stav_clic_config(to_integer(unsigned(piv_clic_addr)));
         end if;
     end process proc_clic_mem;
-
-    pov_clic_rdata <= stav_clic_config(to_integer(unsigned(piv_clic_addr)));
 
     gen_clic_int_prio : for ii in 0 to 7 generate
         stav_clic_int_isr_vec(ii) <= gv_PREM_ORIGIN(31 downto 16) & stav_clic_config(ii);
@@ -116,5 +118,7 @@ begin
         cl_DISABLE;
     pov_irq_id            <= sv_clic_irq_id;
     pov_irq_vect          <= sv_clic_irq_vect;
+
+    pov_clic_rdata        <= sv_clic_rdata;
 
 end architecture;
