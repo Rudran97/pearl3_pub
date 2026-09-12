@@ -26,11 +26,17 @@ The host PC sends commands through the `DI` pin. Depending on the command, the m
 | `0xDD`  | Debug    | 6 Bytes     | Resume execution.                                               |
 | `0xDE`  | Debug    | 6 Bytes     | Enter debug mode.                                               |
 | `0xDF`  | Debug    | 6 Bytes     | Disable single-step mode.                                       |
-| `0xD0`  | Debug    | 6 Bytes     | Configure hardware trigger 0.                                   |
-| `0xD1`  | Debug    | 6 Bytes     | Configure hardware trigger 1.                                   |
 | `0xEA`  | Debug    | 6 Bytes     | Write to a general-purpose register or a CSR.                   |
 | `0xEB`  | Debug    | 6 Bytes     | Write to a 32-bit memory location.                              |
 | `0xE6`  | Debug    | 6 Bytes     | Write to the `debug write value register`.                      |
+| `0xC0`  | Debug    | 6 Bytes     | Configure hardware trigger 0.                                   |
+| `0xC1`  | Debug    | 6 Bytes     | Configure hardware trigger 1.                                   |
+| `0xC2`  | Debug    | 6 Bytes     | Configure hardware trigger 2.                                   |
+| `0xC3`  | Debug    | 6 Bytes     | Configure hardware trigger 3.                                   |
+| `0xC4`  | Debug    | 6 Bytes     | Configure hardware trigger 4.                                   |
+| `0xC5`  | Debug    | 6 Bytes     | Configure hardware trigger 5.                                   |
+| `0xC6`  | Debug    | 6 Bytes     | Configure hardware trigger 6.                                   |
+| `0xC7`  | Debug    | 6 Bytes     | Configure hardware trigger 7.                                   |
 
 ---
 
@@ -211,7 +217,7 @@ This command does not require `Parameter` or `State`.
 
 ---
 
-### Configure Trigger0 (`0xD0`)
+### Configure Trigger (`0xC0 - 0xC7`)
 
 Configures hardware trigger module 0.
 
@@ -219,19 +225,6 @@ Configures hardware trigger module 0.
 | :---        | :---             |
 | `0x00`      | Disable trigger. |
 | `0x01`      | Enable trigger   |
-
-When enabled, `Parameter` specifies the instruction address used for trigger matching.
-
----
-
-### Configure Trigger1 (`0xD1`)
-
-Configures hardware trigger module 1.
-
-| State value | Description      |
-| :---        | :---             |
-| `0x00`      | Disable trigger. |
-| `0x01`      | Enable trigger.  |
 
 When enabled, `Parameter` specifies the instruction address used for trigger matching.
 
