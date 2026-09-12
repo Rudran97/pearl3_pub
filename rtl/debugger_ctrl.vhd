@@ -25,7 +25,7 @@ entity debugger_ctrl is
         pil_dbg_rx_valid  : in std_logic;                     -- rx data is valid
         piv_dbg_rx_data   : in std_logic_vector(7 downto 0);
 
-		---------------------------------
+        ---------------------------------
         --- debugger/memory interface ---
         pol_dbg_mem_access   : out std_logic;
         pov_dbg_mem_addr     : out std_logic_vector(31 downto 0);
@@ -37,7 +37,7 @@ entity debugger_ctrl is
         pol_debug_haltreq    : out std_logic;
         pol_debug_resumereq  : out std_logic;
         pil_debug_halted     : in std_logic;
-		piv_debug_pc_retired : in std_logic_vector(31 downto 0);
+        piv_debug_pc_retired : in std_logic_vector(31 downto 0);
 
         pol_debug_regreq     : out std_logic;
         pov_debug_regno      : out std_logic_vector(11 downto 0);
@@ -69,13 +69,19 @@ architecture rtl of debugger_ctrl is
         dbg_exit_step_st,
         dbg_cfg_trig0_st,
         dbg_cfg_trig1_st,
+        dbg_cfg_trig2_st,
+        dbg_cfg_trig3_st,
+        dbg_cfg_trig4_st,
+        dbg_cfg_trig5_st,
+        dbg_cfg_trig6_st,
+        dbg_cfg_trig7_st,
         wait_on_tselect_st,
         dbg_set_tdata1_st,
         wait_on_tdata1_st,
         dbg_set_tdata2_st,
         wait_dbg_done_st,
         debug_response_st
-	);
+    );
     signal st_dbg_fsm                   : t_dbg_fsm;
 
     signal sl_dbg_done                  : std_logic;
@@ -91,7 +97,7 @@ architecture rtl of debugger_ctrl is
     signal sl_en_parsing                : std_logic;
     signal sl_already_in_debug          : std_logic;
     signal sl_is_in_step                : std_logic;
-    signal sv_is_in_trig                : std_logic_vector(1 downto 0); -- bit 1 represents trig1, bit 0 represents trig0
+    signal sv_is_in_trig                : std_logic_vector(7 downto 0); -- represents trig7..trig0
     signal sl_debug_log_reg             : std_logic;
     signal sl_debug_log_mem             : std_logic;
     signal sl_debug_log_pc_ret          : std_logic;
@@ -129,30 +135,30 @@ architecture rtl of debugger_ctrl is
     signal sl_debug_write               : std_logic;
     signal sv_debug_wdata               : std_logic_vector(31 downto 0);
 
-	type tav_CSR is array (0 to 20) of std_logic_vector(11 downto 0);
-	constant ctav_CSR                   : tav_CSR := (
-		X"301",
-		X"F11",
-		X"F12",
-		X"F13",
-		X"F14",
-		X"B02",
-		X"300",
-		X"304",
-		X"305",
-		X"344",
-		X"342",
-		X"341",
-		X"340",
-		X"343",
-		X"7A0",
-		X"7A1",
-		X"7A2",
-		X"7B0",
-		X"7B1",
-		X"7B2",
-		X"7B3"
-	);
+    type tav_CSR is array (0 to 20) of std_logic_vector(11 downto 0);
+    constant ctav_CSR                   : tav_CSR := (
+        X"301",
+        X"F11",
+        X"F12",
+        X"F13",
+        X"F14",
+        X"B02",
+        X"300",
+        X"304",
+        X"305",
+        X"344",
+        X"342",
+        X"341",
+        X"340",
+        X"343",
+        X"7A0",
+        X"7A1",
+        X"7A2",
+        X"7B0",
+        X"7B1",
+        X"7B2",
+        X"7B3"
+    );
 
 begin
 
@@ -173,7 +179,7 @@ begin
             sl_en_parsing             <= cl_DISABLE;
             sl_already_in_debug       <= cl_DISABLE;
             sl_is_in_step             <= cl_DISABLE;
-            sv_is_in_trig             <= "00";
+            sv_is_in_trig             <= (others => cl_DISABLE);
             sl_debug_log_reg          <= cl_DISABLE;
             sl_debug_log_mem          <= cl_DISABLE;
             sl_debug_log_pc_ret       <= cl_DISABLE;
@@ -266,6 +272,24 @@ begin
                             when cv_dbg_cfg_TRIG1 =>
                                 sv_is_in_trig(1) <= stav_dbg_command(5)(0);
                                 st_dbg_fsm       <= dbg_cfg_trig1_st;
+                            when cv_dbg_cfg_TRIG2 =>
+                                sv_is_in_trig(2) <= stav_dbg_command(5)(0);
+                                st_dbg_fsm       <= dbg_cfg_trig2_st;
+                            when cv_dbg_cfg_TRIG3 =>
+                                sv_is_in_trig(3) <= stav_dbg_command(5)(0);
+                                st_dbg_fsm       <= dbg_cfg_trig3_st;
+                            when cv_dbg_cfg_TRIG4 =>
+                                sv_is_in_trig(4) <= stav_dbg_command(5)(0);
+                                st_dbg_fsm       <= dbg_cfg_trig4_st;
+                            when cv_dbg_cfg_TRIG5 =>
+                                sv_is_in_trig(5) <= stav_dbg_command(5)(0);
+                                st_dbg_fsm       <= dbg_cfg_trig5_st;
+                            when cv_dbg_cfg_TRIG6 =>
+                                sv_is_in_trig(6) <= stav_dbg_command(5)(0);
+                                st_dbg_fsm       <= dbg_cfg_trig6_st;
+                            when cv_dbg_cfg_TRIG7 =>
+                                sv_is_in_trig(7) <= stav_dbg_command(5)(0);
+                                st_dbg_fsm       <= dbg_cfg_trig7_st;
                             when cv_dbg_enter     =>
                                 st_dbg_fsm     <= dbg_enter_st;
                             when others =>
@@ -361,6 +385,36 @@ begin
                     stav_dbg_command(0) <= cv_dbg_tselect;
                     sv_dbg_ctrl_rdata   <= cv_DBG_TSELECT_TRIG1;
                     st_dbg_fsm          <= wait_on_tselect_st;
+                when dbg_cfg_trig2_st =>
+                    sl_dbg_ctrl_en      <= cl_ENABLE;
+                    stav_dbg_command(0) <= cv_dbg_tselect;
+                    sv_dbg_ctrl_rdata   <= cv_DBG_TSELECT_TRIG2;
+                    st_dbg_fsm          <= wait_on_tselect_st;
+                when dbg_cfg_trig3_st =>
+                    sl_dbg_ctrl_en      <= cl_ENABLE;
+                    stav_dbg_command(0) <= cv_dbg_tselect;
+                    sv_dbg_ctrl_rdata   <= cv_DBG_TSELECT_TRIG3;
+                    st_dbg_fsm          <= wait_on_tselect_st;
+                when dbg_cfg_trig4_st =>
+                    sl_dbg_ctrl_en      <= cl_ENABLE;
+                    stav_dbg_command(0) <= cv_dbg_tselect;
+                    sv_dbg_ctrl_rdata   <= cv_DBG_TSELECT_TRIG4;
+                    st_dbg_fsm          <= wait_on_tselect_st;
+                when dbg_cfg_trig5_st =>
+                    sl_dbg_ctrl_en      <= cl_ENABLE;
+                    stav_dbg_command(0) <= cv_dbg_tselect;
+                    sv_dbg_ctrl_rdata   <= cv_DBG_TSELECT_TRIG5;
+                    st_dbg_fsm          <= wait_on_tselect_st;
+                when dbg_cfg_trig6_st =>
+                    sl_dbg_ctrl_en      <= cl_ENABLE;
+                    stav_dbg_command(0) <= cv_dbg_tselect;
+                    sv_dbg_ctrl_rdata   <= cv_DBG_TSELECT_TRIG6;
+                    st_dbg_fsm          <= wait_on_tselect_st;
+                when dbg_cfg_trig7_st =>
+                    sl_dbg_ctrl_en      <= cl_ENABLE;
+                    stav_dbg_command(0) <= cv_dbg_tselect;
+                    sv_dbg_ctrl_rdata   <= cv_DBG_TSELECT_TRIG7;
+                    st_dbg_fsm          <= wait_on_tselect_st;
                 when wait_on_tselect_st =>
                     if sl_dbg_ctrl_done = cl_ENABLE then
                         sl_dbg_ctrl_en <= cl_DISABLE;
@@ -417,10 +471,10 @@ begin
                     sl_dbg_tx_en   <= cl_ENABLE;
 
                     if pil_dbg_next_data = cl_ENABLE then
-						if si_resp_byte_ct < 3 then
-							si_resp_byte_ct <= si_resp_byte_ct + 1;
-						else
-							si_resp_byte_ct <= 0;
+                        if si_resp_byte_ct < 3 then
+                            si_resp_byte_ct <= si_resp_byte_ct + 1;
+                        else
+                            si_resp_byte_ct <= 0;
                             sl_dbg_tx_en    <= cl_DISABLE;
 
                             if sl_debug_log_reg = cl_ENABLE then
@@ -455,9 +509,9 @@ begin
             pol_counter_match_flag  => sl_debug_tot_flag
         );
 
-	-----------------------------------------------------------------------------------------------------
-	-----------------------------------------DEBUGGER MODULE---------------------------------------------
-	-----------------------------------------------------------------------------------------------------
+    -----------------------------------------------------------------------------------------------------
+    -----------------------------------------DEBUGGER MODULE---------------------------------------------
+    -----------------------------------------------------------------------------------------------------
 
     sv_dbg_ctrl_command <= stav_dbg_command(0);
 
