@@ -115,51 +115,51 @@ architecture rtl of pearl3_top is
     signal sv_pmem_rdata            : std_logic_vector(31 downto 0);
 
     --- sram controller ---
-	signal sl_sram_prg_req          : std_logic;
-	signal sl_sram_req              : std_logic;
-	signal sl_sram_wen              : std_logic;
-	signal sl_sram_ack              : std_logic;
-	signal sl_sram_valid            : std_logic;
-	signal sv_sram_byte_sel         : std_logic_vector(3 downto 0);
-	signal sv_sram_addr             : std_logic_vector(31 downto 0);
-	signal sv_sram_wdata            : std_logic_vector(31 downto 0);
-	signal sv_sram_rdata            : std_logic_vector(31 downto 0);
+    signal sl_sram_prg_req          : std_logic;
+    signal sl_sram_req              : std_logic;
+    signal sl_sram_wen              : std_logic;
+    signal sl_sram_ack              : std_logic;
+    signal sl_sram_valid            : std_logic;
+    signal sv_sram_byte_sel         : std_logic_vector(3 downto 0);
+    signal sv_sram_addr             : std_logic_vector(31 downto 0);
+    signal sv_sram_wdata            : std_logic_vector(31 downto 0);
+    signal sv_sram_rdata            : std_logic_vector(31 downto 0);
 
     --- sv32x core ---
-	signal sl_run_prg               : std_logic;
-	signal sl_fetch_mem_valid       : std_logic;
-	signal sl_fetch_mem_ack         : std_logic;
-	signal sl_fetch_mem_req         : std_logic;
-	signal sv_fetch_mem_rdata       : std_logic_vector(31 downto 0);
-	signal sv_fetch_mem_addr        : std_logic_vector(31 downto 0);
-	signal sl_mem_valid             : std_logic;
-	signal sl_mem_ack               : std_logic;
-	signal sl_mem_req               : std_logic;
-	signal sl_mem_wen               : std_logic;
-	signal sv_mem_rdata             : std_logic_vector(31 downto 0);
-	signal sv_mem_wdata             : std_logic_vector(31 downto 0);
-	signal sv_mem_addr              : std_logic_vector(31 downto 0);
-	signal sv_mem_byte_sel          : std_logic_vector(3 downto 0);
-	signal sl_soft_irq              : std_logic;
-	signal sl_timer_irq             : std_logic;
-	signal sl_ext_irq               : std_logic;
-	signal sl_fast_irq              : std_logic;
-	signal sv_fast_irq_id           : std_logic_vector(3 downto 0);
-	signal sv_fast_irq_vect         : std_logic_vector(31 downto 0);
-	signal sl_irq_pending           : std_logic;
-	signal sl_core_debug_haltreq    : std_logic;
-	signal sl_core_debug_resumereq  : std_logic;
-	signal sl_core_debug_havereset  : std_logic;
-	signal sl_core_debug_running    : std_logic;
-	signal sl_core_debug_halted     : std_logic;
+    signal sl_run_prg               : std_logic;
+    signal sl_fetch_mem_valid       : std_logic;
+    signal sl_fetch_mem_ack         : std_logic;
+    signal sl_fetch_mem_req         : std_logic;
+    signal sv_fetch_mem_rdata       : std_logic_vector(31 downto 0);
+    signal sv_fetch_mem_addr        : std_logic_vector(31 downto 0);
+    signal sl_mem_valid             : std_logic;
+    signal sl_mem_ack               : std_logic;
+    signal sl_mem_req               : std_logic;
+    signal sl_mem_wen               : std_logic;
+    signal sv_mem_rdata             : std_logic_vector(31 downto 0);
+    signal sv_mem_wdata             : std_logic_vector(31 downto 0);
+    signal sv_mem_addr              : std_logic_vector(31 downto 0);
+    signal sv_mem_byte_sel          : std_logic_vector(3 downto 0);
+    signal sl_soft_irq              : std_logic;
+    signal sl_timer_irq             : std_logic;
+    signal sl_ext_irq               : std_logic;
+    signal sl_fast_irq              : std_logic;
+    signal sv_fast_irq_id           : std_logic_vector(3 downto 0);
+    signal sv_fast_irq_vect         : std_logic_vector(31 downto 0);
+    signal sl_irq_pending           : std_logic;
+    signal sl_core_debug_haltreq    : std_logic;
+    signal sl_core_debug_resumereq  : std_logic;
+    signal sl_core_debug_havereset  : std_logic;
+    signal sl_core_debug_running    : std_logic;
+    signal sl_core_debug_halted     : std_logic;
     signal sv_core_debug_pc_retired : std_logic_vector(31 downto 0);
-	signal sl_core_debug_regreq     : std_logic;
-	signal sv_core_debug_regno      : std_logic_vector(11 downto 0);
-	signal sl_core_debug_write      : std_logic;
-	signal sv_core_debug_wdata      : std_logic_vector(31 downto 0);
-	signal sv_core_debug_rdata      : std_logic_vector(31 downto 0);
-	signal sl_core_debug_ack        : std_logic;
-	signal sl_core_debug_err        : std_logic;
+    signal sl_core_debug_regreq     : std_logic;
+    signal sv_core_debug_regno      : std_logic_vector(11 downto 0);
+    signal sl_core_debug_write      : std_logic;
+    signal sv_core_debug_wdata      : std_logic_vector(31 downto 0);
+    signal sv_core_debug_rdata      : std_logic_vector(31 downto 0);
+    signal sl_core_debug_ack        : std_logic;
+    signal sl_core_debug_err        : std_logic;
 
     --- clic module ---
     signal sv_clic_irq_src          : std_logic_vector(7 downto 0);
@@ -204,9 +204,9 @@ begin
 
     inst_pll : entity work.pll
         port map(
-            inclk0	=> pil_Mclk,
-            c0	    => sl_clk_c0,
-            locked	=> sl_locked
+            inclk0  => pil_Mclk,
+            c0      => sl_clk_c0,
+            locked  => sl_locked
         );
 
     -----------------------------------------------------------------------------------------------------
@@ -379,45 +379,45 @@ begin
     sl_core_debug_write     <= sl_debug_write;
     sv_core_debug_wdata     <= sv_debug_wdata;
 
-	inst_svx32_core : entity work.svx32_core
-		port map(
-			pil_clk              => sl_clk_c0,
-			pil_rst              => sl_module_sync_rst,
-			pil_run_prg          => sl_run_prg,
-			pil_fetch_mem_valid  => sl_fetch_mem_valid,
-			pil_fetch_mem_ack    => sl_fetch_mem_ack,
-			pol_fetch_mem_req    => sl_fetch_mem_req,
-			piv_fetch_mem_rdata  => sv_fetch_mem_rdata,
-			pov_fetch_mem_addr   => sv_fetch_mem_addr,
-			pil_mem_valid        => sl_mem_valid,
-			pil_mem_ack          => sl_mem_ack,
-			pol_mem_req          => sl_mem_req,
-			pol_mem_wen          => sl_mem_wen,
-			piv_mem_rdata        => sv_mem_rdata,
-			pov_mem_wdata        => sv_mem_wdata,
-			pov_mem_addr         => sv_mem_addr,
-			pov_mem_byte_sel     => sv_mem_byte_sel,
-			pil_soft_irq         => sl_soft_irq,
-			pil_timer_irq        => sl_timer_irq,
-			pil_ext_irq          => sl_ext_irq,
-			pil_fast_irq         => sl_fast_irq,
-			piv_fast_irq_id      => sv_fast_irq_id,
-			piv_fast_irq_vect    => sv_fast_irq_vect,
-			pol_irq_pending      => sl_irq_pending,
-			pil_debug_haltreq    => sl_core_debug_haltreq,
-			pil_debug_resumereq  => sl_core_debug_resumereq,
-			pol_debug_havereset  => sl_core_debug_havereset,
-			pol_debug_running    => sl_core_debug_running,
-			pol_debug_halted     => sl_core_debug_halted,
+    inst_svx32_core : entity work.svx32_core
+        port map(
+            pil_clk              => sl_clk_c0,
+            pil_rst              => sl_module_sync_rst,
+            pil_run_prg          => sl_run_prg,
+            pil_fetch_mem_valid  => sl_fetch_mem_valid,
+            pil_fetch_mem_ack    => sl_fetch_mem_ack,
+            pol_fetch_mem_req    => sl_fetch_mem_req,
+            piv_fetch_mem_rdata  => sv_fetch_mem_rdata,
+            pov_fetch_mem_addr   => sv_fetch_mem_addr,
+            pil_mem_valid        => sl_mem_valid,
+            pil_mem_ack          => sl_mem_ack,
+            pol_mem_req          => sl_mem_req,
+            pol_mem_wen          => sl_mem_wen,
+            piv_mem_rdata        => sv_mem_rdata,
+            pov_mem_wdata        => sv_mem_wdata,
+            pov_mem_addr         => sv_mem_addr,
+            pov_mem_byte_sel     => sv_mem_byte_sel,
+            pil_soft_irq         => sl_soft_irq,
+            pil_timer_irq        => sl_timer_irq,
+            pil_ext_irq          => sl_ext_irq,
+            pil_fast_irq         => sl_fast_irq,
+            piv_fast_irq_id      => sv_fast_irq_id,
+            piv_fast_irq_vect    => sv_fast_irq_vect,
+            pol_irq_pending      => sl_irq_pending,
+            pil_debug_haltreq    => sl_core_debug_haltreq,
+            pil_debug_resumereq  => sl_core_debug_resumereq,
+            pol_debug_havereset  => sl_core_debug_havereset,
+            pol_debug_running    => sl_core_debug_running,
+            pol_debug_halted     => sl_core_debug_halted,
             pov_debug_pc_retired => sv_core_debug_pc_retired,
-			pil_debug_regreq     => sl_core_debug_regreq,
-			piv_debug_regno      => sv_core_debug_regno,
-			pil_debug_write      => sl_core_debug_write,
-			piv_debug_wdata      => sv_core_debug_wdata,
-			pov_debug_rdata      => sv_core_debug_rdata,
-			pol_debug_ack        => sl_core_debug_ack,
-			pol_debug_err        => sl_core_debug_err
-		);
+            pil_debug_regreq     => sl_core_debug_regreq,
+            piv_debug_regno      => sv_core_debug_regno,
+            pil_debug_write      => sl_core_debug_write,
+            piv_debug_wdata      => sv_core_debug_wdata,
+            pov_debug_rdata      => sv_core_debug_rdata,
+            pol_debug_ack        => sl_core_debug_ack,
+            pol_debug_err        => sl_core_debug_err
+        );
 
     -----------------------------------------------------------------------------------------------------
     ---------------------------------------------CLIC MODULE---------------------------------------------
