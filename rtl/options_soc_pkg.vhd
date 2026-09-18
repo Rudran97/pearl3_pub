@@ -17,6 +17,6 @@ package options_soc_pkg is
     constant cv_CLIC_ORIGIN    : std_logic_vector(31 downto 0) := X"4000_0000";
     constant cv_IO_ORIGIN      : std_logic_vector(31 downto 0) := X"2000_0000";
     constant cv_SRAM_ORIGIN    : std_logic_vector(31 downto 0) := X"1000_0000";
-    constant cs_BUILD_VER      : string                        := "0130";
+    constant cs_BUILD_VER      : string                        := "0140";
     
 end package;
