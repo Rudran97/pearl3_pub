@@ -223,7 +223,7 @@ begin
 
     pol_debug_haltreq   <= sl_debug_haltreq;
     pol_debug_resumereq <= sl_debug_resumereq;
-    
+
     pol_debug_regreq    <= sl_debug_regreq;
     pov_debug_regno     <= sv_debug_regno;
     pol_debug_write     <= sl_debug_write;

@@ -23,6 +23,8 @@ package pearl3_soc_pkg is
     constant cv_dbg_set_MEM        : std_logic_vector(7 downto 0) := X"EB";
     constant cv_dbg_set_value      : std_logic_vector(7 downto 0) := X"E6";
 
+    constant cv_dbg_cfg_swbreak    : std_logic_vector(7 downto 0) := X"D0";
+
     constant cv_dbg_cfg_TRIG0      : std_logic_vector(7 downto 0) := X"C0";
     constant cv_dbg_cfg_TRIG1      : std_logic_vector(7 downto 0) := X"C1";
     constant cv_dbg_cfg_TRIG2      : std_logic_vector(7 downto 0) := X"C2";

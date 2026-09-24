@@ -88,7 +88,7 @@ architecture rtl of debugger_ctrl is
     signal sl_dbg_tx_en                 : std_logic;
     signal sv_dbg_tx_data               : std_logic_vector(31 downto 0);
     signal sl_dbg_rec_data              : std_logic;
-    
+
     signal si_dbg_tx_packet_idx_ct      : integer range 0 to 63;
     signal si_dbg_rx_packet_idx_ct      : integer range 0 to 5;
     signal si_resp_byte_ct              : integer range 0 to 3;
@@ -97,6 +97,7 @@ architecture rtl of debugger_ctrl is
     signal sl_en_parsing                : std_logic;
     signal sl_already_in_debug          : std_logic;
     signal sl_is_in_step                : std_logic;
+    signal sl_is_in_swbreak             : std_logic;
     signal sv_is_in_trig                : std_logic_vector(7 downto 0); -- represents trig7..trig0
     signal sl_debug_log_reg             : std_logic;
     signal sl_debug_log_mem             : std_logic;
@@ -179,6 +180,7 @@ begin
             sl_en_parsing             <= cl_DISABLE;
             sl_already_in_debug       <= cl_DISABLE;
             sl_is_in_step             <= cl_DISABLE;
+            sl_is_in_swbreak          <= cl_DISABLE;
             sv_is_in_trig             <= (others => cl_DISABLE);
             sl_debug_log_reg          <= cl_DISABLE;
             sl_debug_log_mem          <= cl_DISABLE;
@@ -266,6 +268,10 @@ begin
                             when cv_dbg_exit_step =>
                                 sl_is_in_step <= cl_DISABLE;
                                 st_dbg_fsm    <= dbg_exit_step_st;
+                            when cv_dbg_cfg_swbreak =>
+                                sl_is_in_swbreak <= stav_dbg_command(5)(0);
+                                sv_dbg_tx_data   <= X"0000" & stav_dbg_command(0) & cv_host_noerr;
+                                st_dbg_fsm       <= debug_response_st;
                             when cv_dbg_cfg_TRIG0 =>
                                 sv_is_in_trig(0) <= stav_dbg_command(5)(0);
                                 st_dbg_fsm       <= dbg_cfg_trig0_st;
@@ -309,7 +315,7 @@ begin
                 when dbg_log_reg_st =>
                     sl_dbg_ctrl_en <= cl_ENABLE;
                     st_dbg_fsm     <= wait_dbg_done_st;
-                    
+
                     if si_dbg_tx_packet_idx_ct < 32 then
                         si_dbg_tx_packet_idx_ct <= si_dbg_tx_packet_idx_ct + 1;
                         sv_dbg_ctrl_rdata       <= std_logic_vector(X"0000_0000" + to_unsigned(si_dbg_tx_packet_idx_ct, 32));
@@ -330,7 +336,7 @@ begin
                     sl_dbg_ctrl_en    <= cl_ENABLE;
                     sv_dbg_ctrl_rdata <= stav_dbg_command(4) & stav_dbg_command(3) & stav_dbg_command(2) & stav_dbg_command(1)(7 downto 2) & "00";
                     st_dbg_fsm        <= wait_dbg_done_st;
-                    
+
                     if si_dbg_tx_packet_idx_ct < 1 then
                         si_dbg_tx_packet_idx_ct <= si_dbg_tx_packet_idx_ct + 1;
                     else
@@ -355,9 +361,9 @@ begin
                     sl_dbg_ctrl_en <= cl_ENABLE;
                     st_dbg_fsm     <= wait_dbg_done_st;
 
-                    if (sl_is_in_step or sv_is_in_trig(1) or sv_is_in_trig(0)) = cl_ENABLE then
+                    if (sl_is_in_step = cl_ENABLE or sv_is_in_trig /= X"00" or sl_is_in_swbreak = cl_ENABLE) then
                         --- if core is in step or trigger match mode then the debugger will return only on halt ---
-                        stav_dbg_command(0) <= cv_dbg_next_hlt;  
+                        stav_dbg_command(0) <= cv_dbg_next_hlt;
                     else
                         sl_en_parsing       <= cl_DISABLE;
                         sl_already_in_debug <= cl_DISABLE;
@@ -543,7 +549,7 @@ begin
             pil_debug_ack        => pil_debug_ack,
             pil_debug_err        => pil_debug_err
         );
-    
+
     --- Debugger to Core/Memory interface --- 
     pol_dbg_mem_access   <= sl_dbg_mem_access;
     pov_dbg_mem_addr     <= sv_dbg_mem_addr;
