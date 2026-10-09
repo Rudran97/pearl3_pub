@@ -10,6 +10,9 @@ package pearl3_soc_pkg is
     constant cv_prg_FLASH          : std_logic_vector(7 downto 0) := X"AA";
     constant cv_prg_FLASH_HLT      : std_logic_vector(7 downto 0) := X"AD";
 
+    --- Serial monitor commands ---
+    constant cv_ser_MONITOR        : std_logic_vector(7 downto 0) := X"BD";
+
     --- Host debugger commands ---
     constant cv_dbg_log_REG        : std_logic_vector(7 downto 0) := X"DA";
     constant cv_dbg_log_MEM        : std_logic_vector(7 downto 0) := X"DB";
@@ -65,6 +68,7 @@ package pearl3_soc_pkg is
     -----------------------------------------------------------------------------------------------------
 
     constant cl_START_BIT    : std_logic := '0';
+    constant cl_nDTR         : std_logic := '0';
     constant ci_CLK_HZ       : integer   := 64_000_000;
     constant cl_GPIO_OUT     : std_logic := cl_DISABLE;
     constant cl_GPIO_IN      : std_logic := cl_ENABLE;

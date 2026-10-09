@@ -4,10 +4,11 @@ The pearl3 microcontroller supports serial program loading and debugging through
 
 Communication between the host PC and the microcontroller takes place using the following pins:
 
-| Signal | Direction | Description                                              |
-| :---   | :---      | :---                                                     |
-| DI     | Input     | Serial programming and debug command input from host PC. |
-| DO     | Output    | Serial response output from microcontroller.             |
+| Signal | Direction | Description                                                                       |
+| :---   | :---      | :---                                                                              |
+| DTR    | Input     | (active low) Data Terminal Ready from host PC (required for uart serial monitor). |
+| DI     | Input     | Serial programming and debug command input from host PC.                          |
+| DO     | Output    | Serial response output from microcontroller.                                      |
 
 The host PC sends commands through the `DI` pin. Depending on the command, the microcontroller may return status information or debug data through the `DO` pin.
 
@@ -15,28 +16,29 @@ The host PC sends commands through the `DI` pin. Depending on the command, the m
 
 ## Supported Commands
 
-| Command | Mode     | Packet Size | Description                                                     |
-| :---    | :---     | ---:        | :---                                                            |
-| `0xAA`  | Program  | 1 Byte      | Program application image and immediately start execution.      |
-| `0xAD`  | Program  | 1 Byte      | Program application image and halt execution after programming. |
-| `0xDA`  | Debug    | 6 Bytes     | Read all general-purpose registers and supported CSRs.          |
-| `0xDB`  | Debug    | 6 Bytes     | Read from 32-bit memory location.                               |
-| `0xD6`  | Debug    | 6 Bytes     | Read retired program counter.                                   |
-| `0xDC`  | Debug    | 6 Bytes     | Enable single-step mode.                                        |
-| `0xDD`  | Debug    | 6 Bytes     | Resume execution.                                               |
-| `0xDE`  | Debug    | 6 Bytes     | Enter debug mode.                                               |
-| `0xDF`  | Debug    | 6 Bytes     | Disable single-step mode.                                       |
-| `0xEA`  | Debug    | 6 Bytes     | Write to a general-purpose register or a CSR.                   |
-| `0xEB`  | Debug    | 6 Bytes     | Write to a 32-bit memory location.                              |
-| `0xE6`  | Debug    | 6 Bytes     | Write to the `debug write value register`.                      |
-| `0xC0`  | Debug    | 6 Bytes     | Configure hardware trigger 0.                                   |
-| `0xC1`  | Debug    | 6 Bytes     | Configure hardware trigger 1.                                   |
-| `0xC2`  | Debug    | 6 Bytes     | Configure hardware trigger 2.                                   |
-| `0xC3`  | Debug    | 6 Bytes     | Configure hardware trigger 3.                                   |
-| `0xC4`  | Debug    | 6 Bytes     | Configure hardware trigger 4.                                   |
-| `0xC5`  | Debug    | 6 Bytes     | Configure hardware trigger 5.                                   |
-| `0xC6`  | Debug    | 6 Bytes     | Configure hardware trigger 6.                                   |
-| `0xC7`  | Debug    | 6 Bytes     | Configure hardware trigger 7.                                   |
+| Command | Mode           | Packet Size | Description                                                     |
+| :---    | :---           | ---:        | :---                                                            |
+| `0xAA`  | Program        | 1 Byte      | Program application image and immediately start execution.      |
+| `0xAD`  | Program        | 1 Byte      | Program application image and halt execution after programming. |
+| `0xBD`  | Serial monitor | 1 Byte      | Open uart serial monitor.                                       |
+| `0xDA`  | Debug          | 6 Bytes     | Read all general-purpose registers and supported CSRs.          |
+| `0xDB`  | Debug          | 6 Bytes     | Read from 32-bit memory location.                               |
+| `0xD6`  | Debug          | 6 Bytes     | Read retired program counter.                                   |
+| `0xDC`  | Debug          | 6 Bytes     | Enable single-step mode.                                        |
+| `0xDD`  | Debug          | 6 Bytes     | Resume execution.                                               |
+| `0xDE`  | Debug          | 6 Bytes     | Enter debug mode.                                               |
+| `0xDF`  | Debug          | 6 Bytes     | Disable single-step mode.                                       |
+| `0xEA`  | Debug          | 6 Bytes     | Write to a general-purpose register or a CSR.                   |
+| `0xEB`  | Debug          | 6 Bytes     | Write to a 32-bit memory location.                              |
+| `0xE6`  | Debug          | 6 Bytes     | Write to the `debug write value register`.                      |
+| `0xC0`  | Debug          | 6 Bytes     | Configure hardware trigger 0.                                   |
+| `0xC1`  | Debug          | 6 Bytes     | Configure hardware trigger 1.                                   |
+| `0xC2`  | Debug          | 6 Bytes     | Configure hardware trigger 2.                                   |
+| `0xC3`  | Debug          | 6 Bytes     | Configure hardware trigger 3.                                   |
+| `0xC4`  | Debug          | 6 Bytes     | Configure hardware trigger 4.                                   |
+| `0xC5`  | Debug          | 6 Bytes     | Configure hardware trigger 5.                                   |
+| `0xC6`  | Debug          | 6 Bytes     | Configure hardware trigger 6.                                   |
+| `0xC7`  | Debug          | 6 Bytes     | Configure hardware trigger 7.                                   |
 
 ---
 
@@ -74,6 +76,28 @@ This mode is primarily intended for debugging immediately after reset.
 4. Program memory is updated.
 5. Core execution remains halted.
 6. Host PC must send the parameter and state fields.
+
+---
+
+## Serial Monitor Interface
+
+The serial monitor interface allows the host PC and the microcontroller to send and receive regular uart packets using the `DO` and `DI` pins. The microcontroller automatically routes the `TX` and `RX` pins of the `UART1` module to the `DO` and `DI` pins.
+
+**Note**: Once the serial monitor interface is opened, the microcontroller treats all incoming data on the `DI` pin as regular uart packets. To exit the serial monitor interface, the `DTR` pin of the microcontroller must be connected to the `DTR` pin of the usb-serial adapter. Once a new connection is initiated, the usb-serial adapter pulls the `DTR` pin to ground which resets the interface.
+
+#### Enter Serial Monitor Interface
+
+1. Host PC sends `0xBD`.
+2. Microcontroller initiates a device reset.
+3. Microcontroller routes `UART1` module to `DO` and `DI` pins.
+
+#### Exit Serial Monitor Interface
+
+1. Host PC (usb-serial adapter) pulls `DTR` pin to ground.
+2. Microcontroller resets the interface.
+3. Microcontroller is ready to receive commands again.
+
+---
 
 ## Debug Interface
 

@@ -19,6 +19,10 @@ entity peripheral_controller is
         piv_ioctrl_addr    : in std_logic_vector(11 downto 0);
         piv_ioctrl_wdata   : in std_logic_vector(31 downto 0);
         pov_ioctrl_rdata   : out std_logic_vector(31 downto 0);
+        --- Serial monitor ---
+        pil_ser_mon_en     : in std_logic;
+        pil_ser_mon_RX     : in std_logic;
+        pol_ser_mon_TX     : out std_logic;
         --- Interrupts ---
         pov_IRQ_src        : out std_logic_vector(7 downto 0);
         piv_IRQ_clr        : in std_logic_vector(7 downto 0);
@@ -445,7 +449,8 @@ begin
     stav_UART_tx_data(1) <= stav_pctrl_mem(ci_URT1TX)(8 downto 0);
 
     stal_UART_rx(0) <= stav_pctrl_mem(ci_PORTA)(to_integer(unsigned(stav_pctrl_mem(ci_URT0CON)(ctr_uart_con.i_RX_SEL3 downto ctr_uart_con.i_RX_SEL0))));
-    stal_UART_rx(1) <= stav_pctrl_mem(ci_PORTB)(to_integer(unsigned(stav_pctrl_mem(ci_URT1CON)(ctr_uart_con.i_RX_SEL3 downto ctr_uart_con.i_RX_SEL0))));
+    stal_UART_rx(1) <= pil_ser_mon_RX when pil_ser_mon_en = cl_ENABLE else
+                       stav_pctrl_mem(ci_PORTB)(to_integer(unsigned(stav_pctrl_mem(ci_URT1CON)(ctr_uart_con.i_RX_SEL3 downto ctr_uart_con.i_RX_SEL0))));
 
     gen_UART_modules : for ii in 0 to 1 generate
         inst_uart_controller : entity work.uart_controller
@@ -577,6 +582,8 @@ begin
                 pol_pwm       => stal_PWM_out(ii)
             );
     end generate;
+
+    pol_ser_mon_TX   <= stal_UART_tx(1);
 
     pov_ioctrl_rdata <= sv_pctrl_data_out;
     pov_IRQ_src      <= sv_INT_src;

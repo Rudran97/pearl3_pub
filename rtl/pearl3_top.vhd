@@ -11,6 +11,7 @@ entity pearl3_top is
     port (
         pil_Mclk      : in std_logic;
         pil_nrst      : in std_logic;
+        pil_DTR       : in std_logic;
         pil_DI        : in std_logic;
         pol_DO        : out std_logic;
         piv_PORTA     : in std_logic_vector(15 downto 0);
@@ -71,16 +72,20 @@ architecture rtl of pearl3_top is
     signal sl_global_rst            : std_logic;
     signal sl_module_sync_rst       : std_logic;
 
+    signal sl_TX                    : std_logic;
+
     --- pll ip module ---
     signal sl_clk_c0                : std_logic;
     signal sl_locked                : std_logic;
 
-    --- programmer module ---
+    --- host interface module ---
+    signal sl_ser_mon_en            : std_logic;
+
+    signal sl_DO                    : std_logic;
     signal sl_prg_rst               : std_logic;
     signal sl_prg_reset_out         : std_logic;
     signal sl_prg_core_start        : std_logic;
-    signal sv_hif_state             : std_logic_vector(7 downto 0);
-                              
+
     signal sl_prg_mem_req           : std_logic;
     signal sl_prg_mem_wen           : std_logic;
     signal sv_prg_mem_addr          : std_logic_vector(31 downto 0);
@@ -234,28 +239,30 @@ begin
         port map (
             pil_clk              => sl_clk_c0,
             pil_rst              => sl_prg_rst,
+            pil_DTR              => pil_DTR,
             pil_DI               => pil_DI,
-            pol_DO               => pol_DO,
+            pol_DO               => sl_DO,
             pol_reset            => sl_prg_reset_out,
             pol_core_start       => sl_prg_core_start,
-            pov_hif_state        => sv_hif_state,
+
+            pol_ser_mon_en       => sl_ser_mon_en,
 
             pol_mem_req          => sl_prg_mem_req,
             pol_mem_wen          => sl_prg_mem_wen,
             pov_mem_addr         => sv_prg_mem_addr,
             pov_mem_wdata        => sv_prg_mem_wdata,
-                                   
+
             pol_dbg_mem_access   => sl_dbg_mem_access,
             pov_dbg_mem_addr     => sv_dbg_mem_addr,
             pol_dbg_mem_write    => sl_dbg_mem_write,
             pov_dbg_mem_wdata    => sv_dbg_mem_wdata,
             piv_dbg_mem_rdata    => sv_dbg_mem_rdata,
-                                   
+
             pol_debug_haltreq    => sl_debug_haltreq,
             pol_debug_resumereq  => sl_debug_resumereq,
             pil_debug_halted     => sl_debug_halted,
             piv_debug_pc_retired => sv_debug_pc_retired,
-                                   
+
             pol_debug_regreq     => sl_debug_regreq,
             pov_debug_regno      => sv_debug_regno,
             pol_debug_write      => sl_debug_write,
@@ -341,7 +348,7 @@ begin
             pil_mem_wen       => sl_sram_wen,
             pol_mem_ack       => sl_sram_ack,
             pol_mem_valid     => sl_sram_valid,
-                                
+
             piv_mem_byte_sel  => sv_sram_byte_sel,
             piv_mem_addr      => sv_sram_addr,
             piv_mem_wdata     => sv_sram_wdata,
@@ -485,6 +492,9 @@ begin
             piv_ioctrl_addr  => sv_ioctrl_addr,
             piv_ioctrl_wdata => sv_ioctrl_wdata,
             pov_ioctrl_rdata => sv_ioctrl_rdata,
+            pil_ser_mon_en   => sl_ser_mon_en,
+            pil_ser_mon_RX   => pil_DI,
+            pol_ser_mon_TX   => sl_TX,
             pov_IRQ_src      => sv_io_irq_src,
             piv_IRQ_clr      => sv_io_irq_clr,
             piv_PORTA        => sv_PORTA,
@@ -495,6 +505,9 @@ begin
             pov_LATB         => sv_LATB,
             pov_LATD         => sv_LATD
         );
+
+    pol_DO   <= sl_TX when sl_ser_mon_en = cl_ENABLE else
+                sl_DO;
 
     pov_DDRA <= sv_DDRA;
     pov_DDRB <= sv_DDRB;

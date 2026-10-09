@@ -9,6 +9,7 @@ entity pearl3_soc is
     port (
         pil_Mclk   : in std_logic;
         pil_nrst   : in std_logic;
+        pil_DTR    : in std_logic;
         pil_DI     : in std_logic;
         pol_DO     : out std_logic;
         pbv_PORTA  : inout std_logic_vector(15 downto 0);
@@ -33,6 +34,7 @@ begin
         port map(
             pil_Mclk  => pil_Mclk,
             pil_nrst  => pil_nrst,
+            pil_DTR   => pil_DTR,
             pil_DI    => pil_DI,
             pol_DO    => pol_DO,
             piv_PORTA => sv_PORTA,

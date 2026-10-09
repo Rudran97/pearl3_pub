@@ -7,26 +7,29 @@ use work.pearl3_soc_pkg.all;
 use work.csr_op_unit_pkg.all;
 
 entity host_if_wrapper is
-	generic (
-		gi_baud_rate : integer          := 115200;
-		gs_device_id : string (1 to 17) := "PRV32XXXMMRR.XXXX"
-	);
+    generic (
+        gi_baud_rate : integer          := 115200;
+        gs_device_id : string (1 to 17) := "PRV32XXXMMRR.XXXX"
+    );
     port (
-		pil_clk              : in std_logic;
-		pil_rst              : in std_logic;
-		pil_DI               : in std_logic;
-		pol_DO               : out std_logic;
-		pol_reset            : out std_logic;
-		pol_core_start       : out std_logic;
-        pov_hif_state        : out std_logic_vector(7 downto 0);
+        pil_clk              : in std_logic;
+        pil_rst              : in std_logic;
+        pil_DTR              : in std_logic;
+        pil_DI               : in std_logic;
 
-		--- programmer/memory interfece ---
-		pol_mem_req          : out std_logic;
-		pol_mem_wen          : out std_logic;
-		pov_mem_addr         : out std_logic_vector(31 downto 0);
-		pov_mem_wdata        : out std_logic_vector(31 downto 0);
+        pol_DO               : out std_logic;
+        pol_reset            : out std_logic;
+        pol_core_start       : out std_logic;
 
-		---------------------------------
+        pol_ser_mon_en       : out std_logic;
+
+        --- programmer/memory interfece ---
+        pol_mem_req          : out std_logic;
+        pol_mem_wen          : out std_logic;
+        pov_mem_addr         : out std_logic_vector(31 downto 0);
+        pov_mem_wdata        : out std_logic_vector(31 downto 0);
+
+        ---------------------------------
         --- debugger/memory interface ---
         pol_dbg_mem_access   : out std_logic;
         pov_dbg_mem_addr     : out std_logic_vector(31 downto 0);
@@ -38,7 +41,7 @@ entity host_if_wrapper is
         pol_debug_haltreq    : out std_logic;
         pol_debug_resumereq  : out std_logic;
         pil_debug_halted     : in std_logic;
-		piv_debug_pc_retired : in std_logic_vector(31 downto 0);
+        piv_debug_pc_retired : in std_logic_vector(31 downto 0);
 
         pol_debug_regreq     : out std_logic;
         pov_debug_regno      : out std_logic_vector(11 downto 0);
@@ -53,6 +56,9 @@ end entity host_if_wrapper;
 architecture rtl of host_if_wrapper is
 
     --- signals declared for host_if ---
+    signal sl_host_ser_mon_en           : std_logic;
+    signal sl_host_reset                : std_logic;
+    signal sl_host_core_start           : std_logic;
     signal sl_host_isp_sel              : std_logic;
     signal sl_host_isp_done             : std_logic;
     signal sl_host_isp_flash_hlt        : std_logic;
@@ -72,6 +78,8 @@ architecture rtl of host_if_wrapper is
     signal sv_host_dbg_rx_data          : std_logic_vector(7 downto 0);
 
     --- signals declared for programmer ---
+    signal sl_prg_reset                 : std_logic;
+    signal sl_prg_core_start            : std_logic;
     signal sl_prg_sel                   : std_logic;
     signal sl_prg_done                  : std_logic;
     signal sl_prg_flash_hlt             : std_logic;
@@ -94,9 +102,9 @@ architecture rtl of host_if_wrapper is
 
 begin
 
-	-----------------------------------------------------------------------------------------------------
-	-------------------------------------------- HOST IF ------------------------------------------------
-	-----------------------------------------------------------------------------------------------------
+    -----------------------------------------------------------------------------------------------------
+    -------------------------------------------- HOST IF ------------------------------------------------
+    -----------------------------------------------------------------------------------------------------
 
     sl_host_isp_done           <= sl_prg_done;
     sl_host_isp_tx_en          <= sl_prg_tx_en;
@@ -116,9 +124,12 @@ begin
         port map (
             pil_clk           => pil_clk,
             pil_rst           => pil_rst,
+            pil_DTR           => pil_DTR,
             pil_DI            => pil_DI,
             pol_DO            => pol_DO,
-            pov_hif_state     => pov_hif_state,
+            pol_ser_mon_en    => sl_host_ser_mon_en,
+            pol_reset         => sl_host_reset,
+            pol_core_start    => sl_host_core_start,
             pol_isp_sel       => sl_host_isp_sel,
             pil_isp_done      => sl_host_isp_done,
             pol_isp_flash_hlt => sl_host_isp_flash_hlt,
@@ -138,9 +149,9 @@ begin
             pov_dbg_rx_data   => sv_host_dbg_rx_data
         );
 
-	-----------------------------------------------------------------------------------------------------
-	------------------------------------------- PROGRAMMER ----------------------------------------------
-	-----------------------------------------------------------------------------------------------------
+    -----------------------------------------------------------------------------------------------------
+    ------------------------------------------- PROGRAMMER ----------------------------------------------
+    -----------------------------------------------------------------------------------------------------
 
     sl_prg_sel                 <= sl_host_isp_sel;
     sl_prg_flash_hlt           <= sl_host_isp_flash_hlt;
@@ -155,8 +166,8 @@ begin
         port map (
             pil_clk              => pil_clk,
             pil_rst              => pil_rst,
-            pol_reset            => pol_reset,
-            pol_core_start       => pol_core_start,
+            pol_reset            => sl_prg_reset,
+            pol_core_start       => sl_prg_core_start,
             pil_prg_sel          => sl_prg_sel,
             pol_prg_done         => sl_prg_done,
             pil_prg_flash_hlt    => sl_prg_flash_hlt,
@@ -172,9 +183,9 @@ begin
             pov_mem_wdata        => pov_mem_wdata
         );
 
-	-----------------------------------------------------------------------------------------------------
-	------------------------------------------- DEBUG CTRL ----------------------------------------------
-	-----------------------------------------------------------------------------------------------------
+    -----------------------------------------------------------------------------------------------------
+    ------------------------------------------- DEBUG CTRL ----------------------------------------------
+    -----------------------------------------------------------------------------------------------------
 
     sl_dbg_sel                 <= sl_host_dbg_sel;
     sl_dbg_host_tx_done        <= sl_host_dbg_tx_next_data;
@@ -210,5 +221,11 @@ begin
             pil_debug_ack         => pil_debug_ack,
             pil_debug_err         => pil_debug_err
         );
+
+    pol_reset      <= sl_host_reset when sl_host_ser_mon_en = cl_ENABLE else
+                      sl_prg_reset;
+    pol_core_start <= sl_host_core_start when sl_host_ser_mon_en = cl_ENABLE else
+                      sl_prg_core_start;
+    pol_ser_mon_en <= sl_host_ser_mon_en;
 
 end architecture;

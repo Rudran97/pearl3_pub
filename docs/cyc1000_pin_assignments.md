@@ -12,6 +12,7 @@ The `Board Reference` names correspond to the official pin naming convention use
 | :---            | :---     | :---              |
 | CLK12M          | PIN_M2   | pil_Mclk          |
 | USER_BTN        | PIN_N6   | pil_nrst          |
+| AIN7            | PIN_R11  | pil_DTR           |
 | AIN0            | PIN_R12  | pil_DI            |
 | AREF            | PIN_P11  | pol_DO            |
 
@@ -57,7 +58,7 @@ The `Board Reference` names correspond to the official pin naming convention use
 
 ## PORTB Assignments
 
-`PORTB[6]`, `PORTB[6]`, `PORTB[6]` are not connected.
+`PORTB[6]`, `PORTB[7]`, `PORTB[15]` are not connected.
 
 | Board Reference | FPGA Pin | pearl3_soc Pin    |
 | :---            | :---     | :---              |
