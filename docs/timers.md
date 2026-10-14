@@ -82,7 +82,7 @@ The following registers are associated with each ICT module:
 | 15:12 | -           | -      | -                                                                                                  |
 | 11    | TICyCLRF    | RW     | Clear event capture flag bit (`TFREG.TxICF = 0`). `TICyCLRF` is automatically cleared by Hardware. |
 | 10    | TxCLRF      | RW     | Clear timer flag bit (`TFREG.TxF = 0`). `TxCLRF` is automatically cleared by Hardware.             |
-| 9:8   | ICyPPIN     | RW     | Event counter stop pin. Mapped to PORTB[7:0] (`00000y[ICySPIN]`).                                  |
+| 9:8   | ICyPPIN     | RW     | Event counter stop pin. Mapped to PORTB[7:0] (`00000y[ICyPPIN]`).                                  |
 | 7:6   | ICySPIN     | RW     | Event counter start pin. Mapped to PORTB[7:0] (`00000y[ICySPIN]`).                                 |
 | 5     | TxSET       | RW     | If set, set up Timer. `TxSET` is automatically cleared by Hardware.                                |
 | 4     | TICySET     | RW     | If set, set up Event counter. `TICySET` is automatically cleared by Hardware.                      |

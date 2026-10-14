@@ -62,6 +62,7 @@ architecture rtl of host_if is
         idle_st,
         decode_command_st,
         ser_monitor_st,
+        detect_nDTR_st,
         isp_handler_st,
         isp_send_packet_st,
         isp_wait_st,
@@ -72,6 +73,11 @@ architecture rtl of host_if is
         dbg_rec_packet_st
     );
     signal st_hif_fsm                   : t_hif_fsm;
+
+    constant ci_DTR_debounce_tick       : integer := ((ci_CLK_HZ * 30) / 1000000); -- 30 us tick. Note: 32 bit integer cap.
+
+    signal sl_DTR_counter_on            : std_logic;
+    signal sl_DTR_debounce_flag         : std_logic;
 
     signal sl_rx_uart_en                : std_logic;
     signal sl_tx_uart_en                : std_logic;
@@ -144,6 +150,7 @@ begin
             sl_reset            <= cl_NOTRESET;
             sl_core_start       <= cl_DISABLE;
             sl_ser_mon_en       <= cl_DISABLE;
+            sl_DTR_counter_on   <= cl_DISABLE;
             sl_isp_sel          <= cl_DISABLE;
             sl_isp_flash_hlt    <= cl_DISABLE;
             sl_isp_next_tx_data <= cl_DISABLE;
@@ -192,6 +199,7 @@ begin
                             when cv_ser_MONITOR   =>
                                 sl_ser_mon_en     <= cl_ENABLE;
                                 sl_reset          <= cl_RESET;
+                                sl_rx_uart_en     <= cl_DISABLE;
                                 sl_core_start     <= cl_DISABLE;
                                 st_hif_fsm        <= ser_monitor_st;
                             when others           =>
@@ -200,8 +208,19 @@ begin
                     end if;
                 when ser_monitor_st =>
                     if sl_DTR_sync = cl_nDTR then
-                        sl_ser_mon_en <= cl_DISABLE;
-                        st_hif_fsm    <= idle_st;
+                        sl_DTR_counter_on <= cl_ENABLE;
+                        st_hif_fsm        <= detect_nDTR_st;
+                    end if;
+                when detect_nDTR_st =>
+                    if sl_DTR_debounce_flag = cl_ENABLE then
+                        sl_DTR_counter_on <= cl_DISABLE;
+
+                        if sl_DTR_sync = cl_nDTR then
+                            sl_ser_mon_en <= cl_DISABLE;
+                            st_hif_fsm    <= idle_st;
+                        else
+                            st_hif_fsm    <= ser_monitor_st;
+                        end if;
                     end if;
                 when isp_handler_st =>
                     if pil_isp_tx_en        = cl_ENABLE then
@@ -276,6 +295,21 @@ begin
             end case;
         end if;
     end process proc_host_if_ctrl;
+
+    inst_nDTR_detect : entity work.counter
+        generic map(
+            gi_counter_width => 12,
+            gi_clksrc_div    => 1
+        )
+        port map(
+            pil_clk                 => pil_clk,
+            pil_rst                 => pil_rst,
+            piv_counter_control     => cl_ENABLE & sl_DTR_counter_on,
+            piv_counter_prescale    => (others => '0'),
+            piv_counter_match_value => std_logic_vector(to_unsigned(ci_DTR_debounce_tick, 12)),
+            pov_counter_value       => open,
+            pol_counter_match_flag  => sl_DTR_debounce_flag
+        );
 
     -----------------------------------------------------------------------------------------------------
     -----------------------------------------BAUD RATE GEN-----------------------------------------------

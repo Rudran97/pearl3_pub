@@ -4,11 +4,11 @@ The pearl3 microcontroller supports serial program loading and debugging through
 
 Communication between the host PC and the microcontroller takes place using the following pins:
 
-| Signal | Direction | Description                                                                       |
-| :---   | :---      | :---                                                                              |
-| DTR    | Input     | (active low) Data Terminal Ready from host PC (required for uart serial monitor). |
-| DI     | Input     | Serial programming and debug command input from host PC.                          |
-| DO     | Output    | Serial response output from microcontroller.                                      |
+| Signal | Direction | Description                                                                                        |
+| :---   | :---      | :---                                                                                               |
+| DTR    | Input     | (active low) Data Terminal Ready from host PC (required for uart serial monitor).                  |
+| DI     | Input     | Serial programming and debug command input from host PC (8-bit data, no parity bit, one stop bit). |
+| DO     | Output    | Serial response output from microcontroller (8-bit data, no parity bit, one stop bit).             |
 
 The host PC sends commands through the `DI` pin. Depending on the command, the microcontroller may return status information or debug data through the `DO` pin.
 
@@ -93,7 +93,7 @@ The serial monitor interface allows the host PC and the microcontroller to send 
 
 #### Exit Serial Monitor Interface
 
-1. Host PC (usb-serial adapter) pulls `DTR` pin to ground.
+1. Host PC (usb-serial adapter) pulls `DTR` pin to ground at least for 30 us.
 2. Microcontroller resets the interface.
 3. Microcontroller is ready to receive commands again.
 

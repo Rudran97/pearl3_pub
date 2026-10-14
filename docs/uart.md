@@ -3,6 +3,7 @@
 The microcontroller has two Asynchronous Serial Communication modules URT0 and URT1. Each UART modules has separate TX and RX channels and can be configured to simulaneously transmit and receive data. Each module features the following characteristics:
 
 * 16-bit Baud rate generator.
+* 8-bit or 9-bit data and one stop bit.
 * Separate TX and RX channels.
 * Can be configured to raise interrupt after transmission.
 * Can be configured to raise interrupt after receiving new data.
@@ -24,6 +25,8 @@ The following registers are associated with each UART module:
 | 2     | ENBIT9  | RW     | If set, transmit/receive 9 bits (default 8 bits).                                          |
 | 1     | RXEN    | RW     | If set, ready to receive.                                                                  |
 | 0     | TXEN    | RW     | If set, start transmit.                                                                    |
+
+Once a data packet is received, `RXEN` must be set to `0`. Similarly, once a data packet is transmitted `TXEN` must be set to `0`.
 
 ## UART Baud Rate Generator Register (URTxBRG)
 
